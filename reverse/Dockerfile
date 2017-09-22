@@ -4,8 +4,12 @@ ENV UID=991 GID=991
 
 ARG NGINX_VERSION=1.13.5
 ARG OPENSSL_VERSION=1.1.0f
+ARG PHP_VER=7.1.9
+ARG LIBICONV_VERSION=1.15
 ARG GPG_NGINX="B0F4 2533 73F8 F6F5 10D4  2178 520A 9993 A1C0 52F8"
 ARG BUILD_CORES
+
+ARG PHP_MIRROR=http://ch1.php.net
 
 ARG NGINX_MODULES=" \
     --with-http_ssl_module \
@@ -19,7 +23,6 @@ ARG NGINX_MODULES=" \
     --without-http_scgi_module \
     --without-http_uwsgi_module \
     --without-http_geo_module \
-    --without-http_autoindex_module \
     --without-http_split_clients_module \
     --without-http_memcached_module \
     --without-http_empty_gif_module \
@@ -29,6 +32,67 @@ ARG NGINX_3RD_PARTY_MODULES=" \
     --add-module=/tmp/headers-more-nginx-module \
     --add-module=/tmp/ngx_brotli \
     --add-module=/tmp/nginx-ct"
+
+    ARG PHP_CONF=" \
+        --prefix=/usr \
+        --libdir=/usr/lib/php \
+        --datadir=/usr/share/php \
+        --sysconfdir=/php/etc \
+        --localstatedir=/php/var \
+        --with-pear=/usr/share/php \
+        --with-config-file-scan-dir=/php/conf.d \
+        --with-config-file-path=/php \
+        --with-pic \
+        --disable-short-tags \
+        --without-readline \
+        --enable-bcmath=shared \
+        --enable-fpm \
+        --disable-cgi \
+        --enable-mysqlnd \
+        --enable-mbstring \
+        --with-curl \
+        --with-libedit \
+        --with-openssl \
+        --with-iconv=/usr/local \
+        --with-gd \
+        --with-jpeg-dir \
+        --with-png-dir \
+        --with-webp-dir \
+        --with-xpm-dir=no \
+        --with-freetype-dir \
+        --enable-gd-native-ttf \
+        --disable-gd-jis-conv \
+        --with-zlib"
+
+    ARG PHP_EXT_LIST=" \
+        mysqli \
+        ctype \
+        dom \
+        json \
+        xml \
+        libxml2 \
+        mbstring \
+        posix \
+        xmlwriter \
+        zip \
+        zlib \
+        sqlite3 \
+        pdo_sqlite \
+        pdo_pgsql \
+        pdo_mysql \
+        pcntl \
+        curl \
+        fileinfo \
+        bz2 \
+        intl \
+        mcrypt \
+        openssl \
+        ldap \
+        simplexml \
+        pgsql \
+        ftp \
+        exif \
+        gmp"
 
 RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
 
@@ -49,6 +113,15 @@ RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
     jq \
     libressl \
     bind-tools \
+    libxml2 \
+    libwebp \
+    freetype \
+    openldap \
+    gmp \
+    libmcrypt \
+    bzip2-dev \
+    icu \
+    libpq \
 
 # Installing build dependencies
  && apk add -t build-dependencies \
@@ -59,15 +132,36 @@ RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
     autoconf \
     git \
     go \
+    g++ \
+    libc-dev \
     jemalloc-dev \
     tar \
+    curl-dev \
     libtool \
     pcre-dev \
     zlib-dev \
     binutils \
     gnupg \
     cmake \
-    go \
+    libxml2-dev \
+    pcre-dev \
+    zlib-dev \
+    pkgconf \
+    patch \
+    libwebp-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    libxpm-dev \
+    libedit-dev \
+    libbz2 \
+    sqlite-dev \
+    gd-dev \
+    freetype-dev \
+    openldap-dev \
+    gmp-dev \
+    libmcrypt-dev \
+    icu-dev \
+    postgresql-dev \
 
 # Brotli
  && cd /tmp && git clone https://github.com/bagder/libbrotli --depth=1 \
@@ -85,6 +179,10 @@ RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
  && OPENSSL_TARBALL="openssl-${OPENSSL_VERSION}.tar.gz" \
  && wget -q https://www.openssl.org/source/${OPENSSL_TARBALL} \
  && tar xzf ${OPENSSL_TARBALL} \
+ && cd openssl-${OPENSSL_VERSION} \
+ && wget https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/openssl__1.1.0_chacha20_poly1305.patch \
+ && patch -p1 < openssl__1.1.0_chacha20_poly1305.patch \
+ && cd /tmp \
 
 # Nginx tarball checking
  && NGINX_TARBALL="nginx-${NGINX_VERSION}.tar.gz" \
@@ -121,6 +219,25 @@ RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
     ${NGINX_3RD_PARTY_MODULES} \
  && make -j ${NB_CORES} && make install && make clean \
  && strip -s /usr/local/sbin/nginx \
+
+ ### GNU Libiconv installation
+ && wget https://ftp.gnu.org/pub/gnu/libiconv/libiconv-${LIBICONV_VERSION}.tar.gz -O /tmp/libiconv-${LIBICONV_VERSION}.tar.gz \
+ && tar xzf /tmp/libiconv-${LIBICONV_VERSION}.tar.gz -C /tmp \
+ && cd /tmp/libiconv-${LIBICONV_VERSION} \
+  && ./configure --prefix=/usr/local \
+  && make -j$NB_CORES && make install && libtool --finish /usr/local/lib \
+
+
+ ### PHP installation
+  && wget ${PHP_MIRROR}/get/php-${PHP_VER}.tar.gz/from/this/mirror -O /tmp/php-${PHP_VER}.tar.gz \
+  && wget ${PHP_MIRROR}/get/php-${PHP_VER}.tar.gz.asc/from/this/mirror -O /tmp/php-${PHP_VER}.tar.gz.asc \
+  && mkdir -p /php/conf.d \
+  && tar xzvf /tmp/php-${PHP_VER}.tar.gz -C /tmp \
+  && mv /tmp/php-${PHP_VER} /tmp/php \
+  && cd /tmp/php \
+  && ./configure CFLAGS="-O3 -fstack-protector-strong" ${PHP_CONF} \
+  && make -j ${NB_CORES} \
+  && make install \
 
 # Lego
  && mkdir -p /tmp/go/bin \
