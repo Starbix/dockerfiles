@@ -33,36 +33,36 @@ ARG NGINX_3RD_PARTY_MODULES=" \
     --add-module=/tmp/ngx_brotli \
     --add-module=/tmp/nginx-ct"
 
-    ARG PHP_CONF=" \
-        --prefix=/usr \
-        --libdir=/usr/lib/php \
-        --datadir=/usr/share/php \
-        --sysconfdir=/php/etc \
-        --localstatedir=/php/var \
-        --with-pear=/usr/share/php \
-        --with-config-file-scan-dir=/php/conf.d \
-        --with-config-file-path=/php \
-        --with-pic \
-        --disable-short-tags \
-        --without-readline \
-        --enable-bcmath=shared \
-        --enable-fpm \
-        --disable-cgi \
-        --enable-mysqlnd \
-        --enable-mbstring \
-        --with-curl \
-        --with-libedit \
-        --with-openssl \
-        --with-iconv=/usr/local \
-        --with-gd \
-        --with-jpeg-dir \
-        --with-png-dir \
-        --with-webp-dir \
-        --with-xpm-dir=no \
-        --with-freetype-dir \
-        --enable-gd-native-ttf \
-        --disable-gd-jis-conv \
-        --with-zlib"
+ARG PHP_CONF=" \
+    --prefix=/usr \
+    --libdir=/usr/lib/php \
+    --datadir=/usr/share/php \
+    --sysconfdir=/php/etc \
+    --localstatedir=/php/var \
+    --with-pear=/usr/share/php \
+    --with-config-file-scan-dir=/php/conf.d \
+    --with-config-file-path=/php \
+    --with-pic \
+    --disable-short-tags \
+    --without-readline \
+    --enable-bcmath=shared \
+    --enable-fpm \
+    --disable-cgi \
+    --enable-mysqlnd \
+    --enable-mbstring \
+    --with-curl \
+    --with-libedit \
+    --with-openssl \
+    --with-iconv=/usr/local \
+    --with-gd \
+    --with-jpeg-dir \
+    --with-png-dir \
+    --with-webp-dir \
+    --with-xpm-dir=no \
+    --with-freetype-dir \
+    --enable-gd-native-ttf \
+    --disable-gd-jis-conv \
+    --with-zlib"
 
     ARG PHP_EXT_LIST=" \
         mysqli \
@@ -224,8 +224,8 @@ RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
  && wget https://ftp.gnu.org/pub/gnu/libiconv/libiconv-${LIBICONV_VERSION}.tar.gz -O /tmp/libiconv-${LIBICONV_VERSION}.tar.gz \
  && tar xzf /tmp/libiconv-${LIBICONV_VERSION}.tar.gz -C /tmp \
  && cd /tmp/libiconv-${LIBICONV_VERSION} \
- && ./configure --prefix=/usr/local \
- && make -j ${NB_CORES} && make install && libtool --finish /usr/local/lib \
+  && ./configure --prefix=/usr/local \
+  && make -j$NB_CORES && make install && libtool --finish /usr/local/lib \
 
 
  ### PHP installation
@@ -238,10 +238,6 @@ RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
   && ./configure CFLAGS="-O3 -fstack-protector-strong" ${PHP_CONF} \
   && make -j ${NB_CORES} \
   && make install \
-  && { find /usr/local/bin /usr/local/sbin -type f -perm +0111 -exec strip --strip-all '{}' + || true; } \
-  && make clean \
-  && docker-php-ext-install ${PHP_EXT_LIST} \
-
 
 # ct-submit
  && go get github.com/grahamedgecombe/ct-submit \
