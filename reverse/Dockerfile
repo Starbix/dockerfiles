@@ -70,7 +70,7 @@ ARG NGINX_3RD_PARTY_MODULES=" \
         dom \
         json \
         xml \
-        libxml2 \
+        libxml \
         mbstring \
         posix \
         xmlwriter \
@@ -93,6 +93,8 @@ ARG NGINX_3RD_PARTY_MODULES=" \
         ftp \
         exif \
         gmp"
+
+COPY rootfs /
 
 RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
 
@@ -162,6 +164,8 @@ RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
     libmcrypt-dev \
     icu-dev \
     postgresql-dev \
+    file \
+    re2c \
 
 # Brotli
  && cd /tmp && git clone https://github.com/bagder/libbrotli --depth=1 \
@@ -240,6 +244,7 @@ RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
   && make install \
   && { find /usr/local/bin /usr/local/sbin -type f -perm +0111 -exec strip --strip-all '{}' + || true; } \
   && make clean \
+  && chmod u+x /usr/local/bin/* /etc/s6.d/*/* \
   && docker-php-ext-install ${PHP_EXT_LIST} \
 
 
@@ -250,10 +255,6 @@ RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
 # Clean
  && apk del build-dependencies \
  && rm -rf /tmp/* /var/cache/apk/* /root/.gnupg
-
-COPY rootfs /
-
-RUN chmod +x /usr/local/bin/startup /etc/s6.d/*/*
 
 EXPOSE 8000 8443
 
