@@ -1,7 +1,5 @@
 FROM alpine:3.6
 
-ENV UID=991 GID=991
-
 ARG BUILD_CORES
 
 ARG NGINX_VER=1.13.5
@@ -242,11 +240,12 @@ ${NGINX_3RD_PARTY_MODULES} \
 ### Strip, clean, install modules
  && { find /usr/local/bin /usr/local/sbin -type f -perm +0111 -exec strip --strip-all '{}' + || true; } \
  && make clean \
- && chmod a+x /usr/local/bin/* /etc/s6.d/*/* \
+ && chmod u+x /usr/local/bin/* /etc/s6.d/*/* \
+ && sync \
  && docker-php-ext-install ${PHP_EXT_LIST} \
  && apk del ${BUILD_DEPS} \
  && rm -rf /tmp/* /var/cache/apk/* /usr/src/* \
  && mkdir -p /nginx/logs /nginx/run /php/php-fpm.d /php/logs /php/run /php/session
 
 
-CMD ["run.sh"]
+CMD ["/bin/s6-svscan", "/etc/s6.d"]
