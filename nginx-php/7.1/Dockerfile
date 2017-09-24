@@ -220,7 +220,6 @@ RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
  --error-log-path=/nginx/log/nginx_error.log \
  --pid-path=/nginx/run/nginx.pid \
  --lock-path=/nginx/run/nginx.lock \
- --user=reverse --group=reverse \
 ${NGINX_CONF} \
 ${NGINX_3RD_PARTY_MODULES} \
 
@@ -251,4 +250,4 @@ ${NGINX_3RD_PARTY_MODULES} \
  && mkdir -p /nginx/logs /nginx/run /php/php-fpm.d /php/logs /php/run /php/session
 
 
-CMD ["exec", "su-exec", "$UID:$GID", "/bin/s6-svscan", "/etc/s6.d"]
+CMD ["run.sh"]
