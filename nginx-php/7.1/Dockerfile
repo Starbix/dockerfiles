@@ -154,6 +154,7 @@ RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
     s6 \
     su-exec \
     curl \
+    jemalloc \
     libedit \
     libxml2 \
     libressl \
