@@ -1,6 +1,5 @@
 FROM alpine:3.6
 
-
 ARG BUILD_CORES
 ENV UID=991 GID=991
 
@@ -248,6 +247,5 @@ ${NGINX_3RD_PARTY_MODULES} \
  && apk del ${BUILD_DEPS} \
  && rm -rf /tmp/* /var/cache/apk/* /usr/src/* \
  && mkdir -p /nginx/logs /nginx/run /php/php-fpm.d /php/logs /php/run /php/session
-
 
 CMD ["run.sh"]
