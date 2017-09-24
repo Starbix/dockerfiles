@@ -249,4 +249,4 @@ ${NGINX_3RD_PARTY_MODULES} \
  && mkdir -p /nginx/logs /nginx/run /php/php-fpm.d /php/logs /php/run /php/session
 
 
-CMD ["/bin/s6-svscan", "/etc/s6.d"]
+CMD ["run.sh"]
