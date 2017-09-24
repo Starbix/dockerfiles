@@ -1,6 +1,8 @@
 FROM alpine:3.6
 
+
 ARG BUILD_CORES
+ENV UID=991 GID=991
 
 ARG NGINX_VER=1.13.5
 ARG PHP_VER=7.1.9
@@ -249,4 +251,4 @@ ${NGINX_3RD_PARTY_MODULES} \
  && mkdir -p /nginx/logs /nginx/run /php/php-fpm.d /php/logs /php/run /php/session
 
 
-CMD ["/bin/s6-svscan", "/etc/s6.d"]
+CMD ["exec", "su-exec", "$UID:$GID", "/bin/s6-svscan", "/etc/s6.d"]
