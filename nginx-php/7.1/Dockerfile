@@ -149,6 +149,7 @@ RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
     automake \
     file \
     jemalloc-dev \
+    patch \
     ${CUSTOM_BUILD_PKGS}" \
  && apk -U add \
     ${BUILD_DEPS} \
@@ -172,7 +173,7 @@ RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
  && wget ${PHP_MIRROR}/get/php-${PHP_VER}.tar.gz.asc/from/this/mirror -O /tmp/php-${PHP_VER}.tar.gz.asc \
  && wget http://ftp.gnu.org/pub/gnu/libiconv/libiconv-${LIBICONV_VERSION}.tar.gz -O /tmp/libiconv-${LIBICONV_VERSION}.tar.gz \
  && OPENSSL_TARBALL="openssl-${OPENSSL_VERSION}.tar.gz" \
- && wget -q https://www.openssl.org/source/${OPENSSL_TARBALL} \
+ && wget https://www.openssl.org/source/${OPENSSL_TARBALL} \
  && mkdir -p /php/conf.d \
  && mkdir -p /usr/src \
  && tar xzf ${OPENSSL_TARBALL} -C /usr/src \
@@ -206,8 +207,8 @@ RUN NB_CORES=${BUILD_CORES-$(getconf _NPROCESSORS_CONF)} \
 ### nginx installation
  && cd /usr/src/nginx-${NGINX_VER} \
  # Nginx patch : dynamic TLS records
- && wget -q https://raw.githubusercontent.com/cujanovic/nginx-dynamic-tls-records-patch/master/nginx__dynamic_tls_records_1.13.0%2B.patch -O dynamic_records.patch \
- && patch -p1 < dynamic_records.patch \
+ && wget https://gist.githubusercontent.com/SoftCreatR/b5047bda93e10ef048c7f7d4ffba3ec6/raw/d1e25c13769631303a651a8a8b08aa91befd73d5/nginx_1.13.5_sslconfig_combined.patch \
+ && patch -p1 < nginx_1.13.5_sslconfig_combined.patch \
  && ./configure \
  --prefix=/nginx \
  --sbin-path=/usr/local/sbin/nginx \
